@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  dco:
+    if: github.event_name == 'pull_request'
+    uses: cloudsmith-cloud/cloudsmith-workflows/.github/workflows/dco-check.yml@v1.0.0
+
+  bicep-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Azure CLI
+        uses: azure/setup-azure-cli@v2
+      - name: Upgrade Bicep
+        run: az bicep upgrade
+      - name: Lint Bicep files
+        run: |
+          find . -name "*.bicep" | while read f; do
+            echo "Linting $f"
+            az bicep lint --file "$f"
+          done
